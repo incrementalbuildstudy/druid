@@ -19,7 +19,6 @@
 
 package io.druid.data.input.impl;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import junit.framework.Assert;
 import org.junit.Test;
@@ -31,11 +30,7 @@ import java.util.List;
  */
 public class DimensionsSpecSerdeTest
 {
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-  static {
-    OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-  }
+  private final ObjectMapper mapper = new ObjectMapper();
 
   @Test
   public void testDimensionsSpecSerde() throws Exception
@@ -64,9 +59,9 @@ public class DimensionsSpecSerdeTest
                      + "\"spatialDimensions\": [{\"dimName\":\"IMPR\", \"dims\":[\"S\",\"P\",\"Q\",\"R\"]}]"
                      + "}";
 
-    DimensionsSpec actual = OBJECT_MAPPER.readValue(
-        OBJECT_MAPPER.writeValueAsString(
-            OBJECT_MAPPER.readValue(jsonStr, DimensionsSpec.class)
+    DimensionsSpec actual = mapper.readValue(
+        mapper.writeValueAsString(
+            mapper.readValue(jsonStr, DimensionsSpec.class)
         ),
         DimensionsSpec.class
     );

@@ -25,7 +25,6 @@ import io.druid.jackson.DefaultObjectMapper;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Set;
 
 /**
@@ -42,39 +41,19 @@ public class TimeDimExtractionFnTest
   };
 
   @Test
-  public void testEmptyNullAndUnparseableExtraction()
+  public void testEmptyAndNullExtraction()
   {
-    for (boolean joda : Arrays.asList(true, false)) {
-      ExtractionFn extractionFn = new TimeDimExtractionFn("MM/dd/yyyy", "MM/yyyy", joda);
+    ExtractionFn extractionFn = new TimeDimExtractionFn("MM/dd/yyyy", "MM/yyyy");
 
-      Assert.assertNull(extractionFn.apply(null));
-      Assert.assertNull(extractionFn.apply(""));
-      Assert.assertEquals("foo", extractionFn.apply("foo"));
-    }
+    Assert.assertNull(extractionFn.apply(null));
+    Assert.assertNull(extractionFn.apply(""));
   }
 
   @Test
   public void testMonthExtraction()
   {
     Set<String> months = Sets.newHashSet();
-    ExtractionFn extractionFn = new TimeDimExtractionFn("MM/dd/yyyy", "MM/yyyy", false);
-
-    for (String dim : dims) {
-      months.add(extractionFn.apply(dim));
-    }
-
-    Assert.assertEquals(months.size(), 4);
-    Assert.assertTrue(months.contains("01/2012"));
-    Assert.assertTrue(months.contains("03/2012"));
-    Assert.assertTrue(months.contains("05/2012"));
-    Assert.assertTrue(months.contains("12/2012"));
-  }
-
-  @Test
-  public void testMonthExtractionJoda()
-  {
-    Set<String> months = Sets.newHashSet();
-    ExtractionFn extractionFn = new TimeDimExtractionFn("MM/dd/yyyy", "MM/yyyy", true);
+    ExtractionFn extractionFn = new TimeDimExtractionFn("MM/dd/yyyy", "MM/yyyy");
 
     for (String dim : dims) {
       months.add(extractionFn.apply(dim));
@@ -91,7 +70,7 @@ public class TimeDimExtractionFnTest
   public void testQuarterExtraction()
   {
     Set<String> quarters = Sets.newHashSet();
-    ExtractionFn extractionFn = new TimeDimExtractionFn("MM/dd/yyyy", "QQQ/yyyy", false);
+    ExtractionFn extractionFn = new TimeDimExtractionFn("MM/dd/yyyy", "QQQ/yyyy");
 
     for (String dim : dims) {
       quarters.add(extractionFn.apply(dim));
@@ -104,36 +83,14 @@ public class TimeDimExtractionFnTest
   }
 
   @Test
-  public void testWeeks()
-  {
-    final TimeDimExtractionFn weekFn = new TimeDimExtractionFn("yyyy-MM-dd", "YYYY-ww", false);
-    Assert.assertEquals("2016-01", weekFn.apply("2015-12-31"));
-    Assert.assertEquals("2016-01", weekFn.apply("2016-01-01"));
-    Assert.assertEquals("2017-01", weekFn.apply("2017-01-01"));
-    Assert.assertEquals("2018-01", weekFn.apply("2017-12-31"));
-    Assert.assertEquals("2018-01", weekFn.apply("2018-01-01"));
-  }
-
-  @Test
-  public void testWeeksJoda()
-  {
-    final TimeDimExtractionFn weekFn = new TimeDimExtractionFn("yyyy-MM-dd", "xxxx-ww", true);
-    Assert.assertEquals("2015-53", weekFn.apply("2015-12-31"));
-    Assert.assertEquals("2015-53", weekFn.apply("2016-01-01"));
-    Assert.assertEquals("2016-52", weekFn.apply("2017-01-01"));
-    Assert.assertEquals("2017-52", weekFn.apply("2017-12-31"));
-    Assert.assertEquals("2018-01", weekFn.apply("2018-01-01"));
-  }
-
-  @Test
   public void testSerde() throws Exception
   {
     final ObjectMapper objectMapper = new DefaultObjectMapper();
-    final String json = "{ \"type\" : \"time\", \"timeFormat\" : \"MM/dd/yyyy\", \"resultFormat\" : \"yyyy-MM-dd\", \"joda\" : true }";
+    final String json = "{ \"type\" : \"time\", \"timeFormat\" : \"MM/dd/yyyy\", \"resultFormat\" : \"QQQ/yyyy\" }";
     TimeDimExtractionFn extractionFn = (TimeDimExtractionFn) objectMapper.readValue(json, ExtractionFn.class);
 
     Assert.assertEquals("MM/dd/yyyy", extractionFn.getTimeFormat());
-    Assert.assertEquals("yyyy-MM-dd", extractionFn.getResultFormat());
+    Assert.assertEquals("QQQ/yyyy", extractionFn.getResultFormat());
 
     // round trip
     Assert.assertEquals(

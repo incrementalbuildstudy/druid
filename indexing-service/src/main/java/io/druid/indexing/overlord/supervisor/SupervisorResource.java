@@ -235,7 +235,7 @@ public class SupervisorResource
                   }
                 }
             );
-            return Response.ok(authorizedSupervisorHistory).build();
+            return Response.ok(supervisorHistory).build();
           }
         }
     );

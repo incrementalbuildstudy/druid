@@ -24,6 +24,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import io.druid.java.util.common.StringUtils;
 import io.druid.java.util.common.guava.CloseQuietly;
 import io.druid.java.util.common.io.smoosh.FileSmoosher;
@@ -155,7 +156,7 @@ public class V3CompressedVSizeColumnarMultiIntsSerializerTest
         for (int i = 0; i < vals.size(); ++i) {
           IndexedInts subVals = columnarMultiInts.get(i);
           assertEquals(subVals.size(), vals.get(i).length);
-          for (int j = 0, size = subVals.size(); j < size; ++j) {
+          for (int j = 0; j < subVals.size(); ++j) {
             assertEquals(subVals.get(j), vals.get(i)[j]);
           }
         }
@@ -239,7 +240,7 @@ public class V3CompressedVSizeColumnarMultiIntsSerializerTest
               segmentWriteOutMedium,
               "offset",
               compressionStrategy,
-              Long.BYTES * 250000
+              Longs.BYTES * 250000
           )
       );
 
@@ -247,7 +248,7 @@ public class V3CompressedVSizeColumnarMultiIntsSerializerTest
           segmentWriteOutMedium,
           "value",
           compressionStrategy,
-          Long.BYTES * 250000
+          Longs.BYTES * 250000
       );
       CompressedVSizeColumnarIntsSerializer valueWriter = new CompressedVSizeColumnarIntsSerializer(
           segmentWriteOutMedium,
@@ -278,7 +279,7 @@ public class V3CompressedVSizeColumnarMultiIntsSerializerTest
       for (int i = 0; i < vals.size(); ++i) {
         IndexedInts subVals = columnarMultiInts.get(i);
         assertEquals(subVals.size(), vals.get(i).length);
-        for (int j = 0, size = subVals.size(); j < size; ++j) {
+        for (int j = 0; j < subVals.size(); ++j) {
           assertEquals(subVals.get(j), vals.get(i)[j]);
         }
       }

@@ -19,7 +19,6 @@
 
 package io.druid.sql.calcite.expression;
 
-import com.google.common.base.Joiner;
 import io.druid.java.util.common.ISE;
 import io.druid.java.util.common.StringUtils;
 import io.druid.sql.calcite.planner.PlannerContext;
@@ -27,17 +26,15 @@ import io.druid.sql.calcite.table.RowSignature;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlOperator;
 
-import java.util.stream.Collectors;
-
 public class BinaryOperatorConversion implements SqlOperatorConversion
 {
   private final SqlOperator operator;
-  private final Joiner joiner;
+  private final String druidOperator;
 
   public BinaryOperatorConversion(final SqlOperator operator, final String druidOperator)
   {
     this.operator = operator;
-    this.joiner = Joiner.on(" " + druidOperator + " ");
+    this.druidOperator = druidOperator;
   }
 
   @Override
@@ -58,18 +55,16 @@ public class BinaryOperatorConversion implements SqlOperatorConversion
         rowSignature,
         rexNode,
         operands -> {
-          if (operands.size() < 2) {
+          if (operands.size() != 2) {
             throw new ISE("WTF?! Got binary operator[%s] with %s args?", operator.getName(), operands.size());
           }
 
           return DruidExpression.fromExpression(
               StringUtils.format(
-                  "(%s)",
-                  joiner.join(
-                      operands.stream()
-                              .map(DruidExpression::getExpression)
-                              .collect(Collectors.toList())
-                  )
+                  "(%s %s %s)",
+                  operands.get(0).getExpression(),
+                  druidOperator,
+                  operands.get(1).getExpression()
               )
           );
         }

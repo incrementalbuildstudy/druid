@@ -639,13 +639,12 @@ public class GroupByQueryEngineV2
       }
 
       while (!cursor.isDone()) {
-        int multiValuesSize = multiValues.size();
-        if (multiValuesSize == 0) {
+        if (multiValues.size() == 0) {
           if (!grouper.aggregate(GroupByColumnSelectorStrategy.GROUP_BY_MISSING_VALUE).isOk()) {
             return;
           }
         } else {
-          for (; nextValIndex < multiValuesSize; nextValIndex++) {
+          for (; nextValIndex < multiValues.size(); nextValIndex++) {
             if (!grouper.aggregate(multiValues.get(nextValIndex)).isOk()) {
               return;
             }

@@ -36,7 +36,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @PublicApi
 public class DimensionsSpec
@@ -57,9 +56,17 @@ public class DimensionsSpec
       final DimensionSchema.MultiValueHandling multiValueHandling
   )
   {
-    return dimNames.stream()
-                   .map(input -> new StringDimensionSchema(input, multiValueHandling, true))
-                   .collect(Collectors.toList());
+    return Lists.transform(
+        dimNames,
+        new Function<String, DimensionSchema>()
+        {
+          @Override
+          public DimensionSchema apply(String input)
+          {
+            return new StringDimensionSchema(input, multiValueHandling);
+          }
+        }
+    );
   }
 
   public static DimensionSchema convertSpatialSchema(SpatialDimensionSchema spatialSchema)

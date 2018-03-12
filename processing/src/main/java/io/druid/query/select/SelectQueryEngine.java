@@ -111,19 +111,21 @@ public class SelectQueryEngine
     @Override
     public void addRowValuesToSelectResult(String outputName, DimensionSelector selector, Map<String, Object> resultMap)
     {
-      final IndexedInts row = selector.getRow();
-      int rowSize = row.size();
-      if (rowSize == 0) {
+      if (selector == null) {
         resultMap.put(outputName, null);
-      } else if (rowSize == 1) {
-        final String dimVal = selector.lookupName(row.get(0));
-        resultMap.put(outputName, dimVal);
       } else {
-        List<String> dimVals = new ArrayList<>(rowSize);
-        for (int i = 0; i < rowSize; ++i) {
-          dimVals.add(selector.lookupName(row.get(i)));
+        final IndexedInts vals = selector.getRow();
+
+        if (vals.size() == 1) {
+          final String dimVal = selector.lookupName(vals.get(0));
+          resultMap.put(outputName, dimVal);
+        } else {
+          List<String> dimVals = new ArrayList<>(vals.size());
+          for (int i = 0; i < vals.size(); ++i) {
+            dimVals.add(selector.lookupName(vals.get(i)));
+          }
+          resultMap.put(outputName, dimVals);
         }
-        resultMap.put(outputName, dimVals);
       }
     }
   }
@@ -298,9 +300,7 @@ public class SelectQueryEngine
     theEvent.put(timestampKey, DateTimes.utc(timestampColumnSelector.getLong()));
 
     for (ColumnSelectorPlus<SelectColumnSelectorStrategy> selectorPlus : selectorPlusList) {
-      selectorPlus
-          .getColumnSelectorStrategy()
-          .addRowValuesToSelectResult(selectorPlus.getOutputName(), selectorPlus.getSelector(), theEvent);
+      selectorPlus.getColumnSelectorStrategy().addRowValuesToSelectResult(selectorPlus.getOutputName(), selectorPlus.getSelector(), theEvent);
     }
 
     for (Map.Entry<String, BaseObjectColumnValueSelector<?>> metSelector : metSelectors.entrySet()) {

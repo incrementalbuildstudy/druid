@@ -136,13 +136,8 @@ public class GroupByQuery extends BaseQuery<Row>
 
   private Function<Sequence<Row>, Sequence<Row>> makePostProcessingFn()
   {
-    Function<Sequence<Row>, Sequence<Row>> postProcessingFn = limitSpec.build(
-        dimensions,
-        aggregatorSpecs,
-        postAggregatorSpecs,
-        getGranularity(),
-        getContextSortByDimsFirst()
-    );
+    Function<Sequence<Row>, Sequence<Row>> postProcessingFn =
+        limitSpec.build(dimensions, aggregatorSpecs, postAggregatorSpecs);
 
     if (havingSpec != null) {
       postProcessingFn = Functions.compose(
@@ -574,14 +569,22 @@ public class GroupByQuery extends BaseQuery<Row>
       final StringComparator comparator = comparators.get(i);
 
       final int dimCompare;
-      final Object lhsObj = lhs.getRaw(fieldName);
-      final Object rhsObj = rhs.getRaw(fieldName);
+
+      Object lhsObj;
+      Object rhsObj;
+      if (needsReverseList.get(i)) {
+        lhsObj = rhs.getRaw(fieldName);
+        rhsObj = lhs.getRaw(fieldName);
+      } else {
+        lhsObj = lhs.getRaw(fieldName);
+        rhsObj = rhs.getRaw(fieldName);
+      }
 
       if (isNumericField.get(i)) {
         if (comparator.equals(StringComparators.NUMERIC)) {
           dimCompare = ((Ordering) Comparators.naturalNullsFirst()).compare(
-              lhsObj,
-              rhsObj
+              lhs.getRaw(fieldName),
+              rhs.getRaw(fieldName)
           );
         } else {
           dimCompare = comparator.compare(String.valueOf(lhsObj), String.valueOf(rhsObj));
@@ -591,7 +594,7 @@ public class GroupByQuery extends BaseQuery<Row>
       }
 
       if (dimCompare != 0) {
-        return needsReverseList.get(i) ? -dimCompare : dimCompare;
+        return dimCompare;
       }
     }
     return 0;

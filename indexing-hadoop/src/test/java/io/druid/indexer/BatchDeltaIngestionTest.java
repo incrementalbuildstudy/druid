@@ -33,7 +33,6 @@ import io.druid.data.input.impl.CSVParseSpec;
 import io.druid.data.input.impl.DimensionsSpec;
 import io.druid.data.input.impl.StringInputRowParser;
 import io.druid.data.input.impl.TimestampSpec;
-import io.druid.hll.HyperLogLogCollector;
 import io.druid.indexer.hadoop.WindowedDataSegment;
 import io.druid.jackson.DefaultObjectMapper;
 import io.druid.java.util.common.DateTimes;
@@ -48,11 +47,11 @@ import io.druid.segment.QueryableIndex;
 import io.druid.segment.QueryableIndexStorageAdapter;
 import io.druid.segment.StorageAdapter;
 import io.druid.segment.indexing.DataSchema;
+import io.druid.segment.transform.TransformSpec;
 import io.druid.segment.indexing.granularity.UniformGranularitySpec;
 import io.druid.segment.loading.LocalDataSegmentPuller;
 import io.druid.segment.realtime.firehose.IngestSegmentFirehose;
 import io.druid.segment.realtime.firehose.WindowedStorageAdapter;
-import io.druid.segment.transform.TransformSpec;
 import io.druid.timeline.DataSegment;
 import io.druid.timeline.partition.HashBasedNumberedShardSpec;
 import org.apache.commons.io.FileUtils;
@@ -150,81 +149,7 @@ public class BatchDeltaIngestionTest
         )
     );
 
-    testIngestion(
-        config,
-        expectedRows,
-        Iterables.getOnlyElement(segments),
-        ImmutableList.of("host"),
-        ImmutableList.of("visited_sum", "unique_hosts")
-    );
-  }
-
-  /**
-   * By default re-indexing expects same aggregators as used by original indexing job. But, with additional flag
-   * "useNewAggs" in DatasourcePathSpec, user can optionally have any set of aggregators.
-   * See https://github.com/druid-io/druid/issues/5277 .
-   */
-  @Test
-  public void testReindexingWithNewAggregators() throws Exception
-  {
-    List<WindowedDataSegment> segments = ImmutableList.of(new WindowedDataSegment(SEGMENT, INTERVAL_FULL));
-
-    AggregatorFactory[] aggregators = new AggregatorFactory[]{
-        new LongSumAggregatorFactory("visited_sum2", "visited_sum"),
-        new HyperUniquesAggregatorFactory("unique_hosts2", "unique_hosts")
-    };
-
-    Map<String, Object> inputSpec = ImmutableMap.<String, Object>of(
-        "type",
-        "dataSource",
-        "ingestionSpec",
-        ImmutableMap.of(
-            "dataSource",
-            "xyz",
-            "interval",
-            INTERVAL_FULL
-        ),
-        "segments",
-        segments,
-        "useNewAggs", true
-    );
-
-    File tmpDir = temporaryFolder.newFolder();
-
-    HadoopDruidIndexerConfig config = makeHadoopDruidIndexerConfig(
-        inputSpec,
-        tmpDir,
-        aggregators
-    );
-
-    List<ImmutableMap<String, Object>> expectedRows = ImmutableList.of(
-        ImmutableMap.<String, Object>of(
-            "time", DateTimes.of("2014-10-22T00:00:00.000Z"),
-            "host", ImmutableList.of("a.example.com"),
-            "visited_sum2", 100L,
-            "unique_hosts2", 1.0d
-        ),
-        ImmutableMap.<String, Object>of(
-            "time", DateTimes.of("2014-10-22T01:00:00.000Z"),
-            "host", ImmutableList.of("b.example.com"),
-            "visited_sum2", 150L,
-            "unique_hosts2", 1.0d
-        ),
-        ImmutableMap.<String, Object>of(
-            "time", DateTimes.of("2014-10-22T02:00:00.000Z"),
-            "host", ImmutableList.of("c.example.com"),
-            "visited_sum2", 200L,
-            "unique_hosts2", 1.0d
-        )
-    );
-
-    testIngestion(
-        config,
-        expectedRows,
-        Iterables.getOnlyElement(segments),
-        ImmutableList.of("host"),
-        ImmutableList.of("visited_sum2", "unique_hosts2")
-    );
+    testIngestion(config, expectedRows, Iterables.getOnlyElement(segments));
   }
 
   @Test
@@ -264,13 +189,7 @@ public class BatchDeltaIngestionTest
         )
     );
 
-    testIngestion(
-        config,
-        expectedRows,
-        Iterables.getOnlyElement(segments),
-        ImmutableList.of("host"),
-        ImmutableList.of("visited_sum", "unique_hosts")
-    );
+    testIngestion(config, expectedRows, Iterables.getOnlyElement(segments));
   }
 
   @Test
@@ -353,21 +272,13 @@ public class BatchDeltaIngestionTest
         )
     );
 
-    testIngestion(
-        config,
-        expectedRows,
-        Iterables.getOnlyElement(segments),
-        ImmutableList.of("host"),
-        ImmutableList.of("visited_sum", "unique_hosts")
-    );
+    testIngestion(config, expectedRows, Iterables.getOnlyElement(segments));
   }
 
   private void testIngestion(
       HadoopDruidIndexerConfig config,
       List<ImmutableMap<String, Object>> expectedRowsGenerated,
-      WindowedDataSegment windowedDataSegment,
-      List<String> expectedDimensions,
-      List<String> expectedMetrics
+      WindowedDataSegment windowedDataSegment
   ) throws Exception
   {
     IndexGeneratorJob job = new IndexGeneratorJob(config);
@@ -397,8 +308,9 @@ public class BatchDeltaIngestionTest
     Assert.assertEquals(INTERVAL_FULL, dataSegment.getInterval());
     Assert.assertEquals("local", dataSegment.getLoadSpec().get("type"));
     Assert.assertEquals(indexZip.getCanonicalPath(), dataSegment.getLoadSpec().get("path"));
-    Assert.assertEquals(expectedDimensions, dataSegment.getDimensions());
-    Assert.assertEquals(expectedMetrics, dataSegment.getMetrics());
+    Assert.assertEquals("host", dataSegment.getDimensions().get(0));
+    Assert.assertEquals("visited_sum", dataSegment.getMetrics().get(0));
+    Assert.assertEquals("unique_hosts", dataSegment.getMetrics().get(1));
     Assert.assertEquals(Integer.valueOf(9), dataSegment.getBinaryVersion());
 
     HashBasedNumberedShardSpec spec = (HashBasedNumberedShardSpec) dataSegment.getShardSpec();
@@ -414,8 +326,8 @@ public class BatchDeltaIngestionTest
     Firehose firehose = new IngestSegmentFirehose(
         ImmutableList.of(new WindowedStorageAdapter(adapter, windowedDataSegment.getInterval())),
         TransformSpec.NONE,
-        expectedDimensions,
-        expectedMetrics,
+        ImmutableList.of("host"),
+        ImmutableList.of("visited_sum", "unique_hosts"),
         null
     );
 
@@ -424,20 +336,10 @@ public class BatchDeltaIngestionTest
       rows.add(firehose.nextRow());
     }
 
-    verifyRows(expectedRowsGenerated, rows, expectedDimensions, expectedMetrics);
+    verifyRows(expectedRowsGenerated, rows);
   }
 
   private HadoopDruidIndexerConfig makeHadoopDruidIndexerConfig(Map<String, Object> inputSpec, File tmpDir)
-      throws Exception
-  {
-    return makeHadoopDruidIndexerConfig(inputSpec, tmpDir, null);
-  }
-
-  private HadoopDruidIndexerConfig makeHadoopDruidIndexerConfig(
-      Map<String, Object> inputSpec,
-      File tmpDir,
-      AggregatorFactory[] aggregators
-  )
       throws Exception
   {
     HadoopDruidIndexerConfig config = new HadoopDruidIndexerConfig(
@@ -458,7 +360,7 @@ public class BatchDeltaIngestionTest
                     ),
                     Map.class
                 ),
-                aggregators != null ? aggregators : new AggregatorFactory[]{
+                new AggregatorFactory[]{
                     new LongSumAggregatorFactory("visited_sum", "visited_num"),
                     new HyperUniquesAggregatorFactory("unique_hosts", "host2")
                 },
@@ -512,37 +414,25 @@ public class BatchDeltaIngestionTest
     return config;
   }
 
-  private void verifyRows(
-      List<ImmutableMap<String, Object>> expectedRows,
-      List<InputRow> actualRows,
-      List<String> expectedDimensions,
-      List<String> expectedMetrics
-  )
+  private void verifyRows(List<ImmutableMap<String, Object>> expectedRows, List<InputRow> actualRows)
   {
+    System.out.println("actualRows = " + actualRows);
     Assert.assertEquals(expectedRows.size(), actualRows.size());
 
     for (int i = 0; i < expectedRows.size(); i++) {
       Map<String, Object> expected = expectedRows.get(i);
       InputRow actual = actualRows.get(i);
 
+      Assert.assertEquals(ImmutableList.of("host"), actual.getDimensions());
+
       Assert.assertEquals(expected.get("time"), actual.getTimestamp());
-
-      Assert.assertEquals(expectedDimensions, actual.getDimensions());
-
-      expectedDimensions.forEach(s -> Assert.assertEquals(expected.get(s), actual.getDimension(s)));
-
-      for (String metric : expectedMetrics) {
-        Object actualValue = actual.getRaw(metric);
-        if (actualValue instanceof HyperLogLogCollector) {
-          Assert.assertEquals(
-              (Double) expected.get(metric),
-              (Double) HyperUniquesAggregatorFactory.estimateCardinality(actualValue, false),
-              0.001
-          );
-        } else {
-          Assert.assertEquals(expected.get(metric), actual.getMetric(metric));
-        }
-      }
+      Assert.assertEquals(expected.get("host"), actual.getDimension("host"));
+      Assert.assertEquals(expected.get("visited_sum"), actual.getMetric("visited_sum"));
+      Assert.assertEquals(
+          (Double) expected.get("unique_hosts"),
+          (Double) HyperUniquesAggregatorFactory.estimateCardinality(actual.getRaw("unique_hosts"), false),
+          0.001
+      );
     }
   }
 }

@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.druid.data.input.InputRow;
 import io.druid.java.util.common.Intervals;
+import io.druid.segment.writeout.OffHeapMemorySegmentWriteOutMediumFactory;
 import io.druid.query.aggregation.CountAggregatorFactory;
 import io.druid.query.aggregation.DoubleSumAggregatorFactory;
 import io.druid.query.aggregation.LongSumAggregatorFactory;
@@ -31,11 +32,10 @@ import io.druid.query.aggregation.hyperloglog.HyperUniquesAggregatorFactory;
 import io.druid.segment.IndexBuilder;
 import io.druid.segment.QueryableIndex;
 import io.druid.segment.incremental.IncrementalIndexSchema;
-import io.druid.segment.writeout.OffHeapMemorySegmentWriteOutMediumFactory;
 import io.druid.server.security.NoopEscalator;
+import io.druid.sql.calcite.planner.Calcites;
 import io.druid.sql.calcite.planner.PlannerConfig;
 import io.druid.sql.calcite.table.DruidTable;
-import io.druid.sql.calcite.util.CalciteTestBase;
 import io.druid.sql.calcite.util.CalciteTests;
 import io.druid.sql.calcite.util.SpecificSegmentsQuerySegmentWalker;
 import io.druid.sql.calcite.util.TestServerInventoryView;
@@ -58,7 +58,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-public class DruidSchemaTest extends CalciteTestBase
+public class DruidSchemaTest
 {
   private static final PlannerConfig PLANNER_CONFIG_DEFAULT = new PlannerConfig();
 
@@ -83,6 +83,8 @@ public class DruidSchemaTest extends CalciteTestBase
   @Before
   public void setUp() throws Exception
   {
+    Calcites.setSystemProperties();
+
     final File tmpDir = temporaryFolder.newFolder();
     final QueryableIndex index1 = IndexBuilder.create()
                                               .tmpDir(new File(tmpDir, "1"))

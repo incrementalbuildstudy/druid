@@ -96,8 +96,7 @@ public class HadoopIngestionSpecUpdateDatasourcePathSpecSegmentsTest
         jsonMapper,
         null,
         new DatasourceIngestionSpec(testDatasource, testDatasourceInterval, null, null, null, null, null, false, null),
-        null,
-        false
+        null
     );
     HadoopDruidIndexerConfig config = testRunUpdateSegmentListIfDatasourcePathSpecIsUsed(
         pathSpec,
@@ -126,8 +125,7 @@ public class HadoopIngestionSpecUpdateDatasourcePathSpecSegmentsTest
             false,
             null
         ),
-        null,
-        false
+        null
     );
     HadoopDruidIndexerConfig config = testRunUpdateSegmentListIfDatasourcePathSpecIsUsed(
         pathSpec,
@@ -156,8 +154,7 @@ public class HadoopIngestionSpecUpdateDatasourcePathSpecSegmentsTest
             false,
             null
         ),
-        null,
-        false
+        null
     );
     testRunUpdateSegmentListIfDatasourcePathSpecIsUsed(
         pathSpec,
@@ -183,8 +180,7 @@ public class HadoopIngestionSpecUpdateDatasourcePathSpecSegmentsTest
             false,
             null
         ),
-        null,
-        false
+        null
     );
     HadoopDruidIndexerConfig config = testRunUpdateSegmentListIfDatasourcePathSpecIsUsed(
         pathSpec,
@@ -216,8 +212,7 @@ public class HadoopIngestionSpecUpdateDatasourcePathSpecSegmentsTest
                     false,
                     null
                 ),
-                null,
-                false
+                null
             )
         )
     );

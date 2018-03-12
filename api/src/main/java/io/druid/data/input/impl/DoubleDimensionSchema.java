@@ -19,6 +19,7 @@
 
 package io.druid.data.input.impl;
 
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -27,7 +28,7 @@ public class DoubleDimensionSchema extends DimensionSchema
   @JsonCreator
   public DoubleDimensionSchema(@JsonProperty("name") String name)
   {
-    super(name, null, false);
+    super(name, null);
   }
 
   @Override

@@ -21,18 +21,13 @@ package io.druid.data.input.impl;
 
 import com.google.common.collect.Lists;
 import io.druid.java.util.common.parsers.ParseException;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.util.Arrays;
 import java.util.Collections;
 
 public class ParseSpecTest
 {
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
-
   @Test(expected = ParseException.class)
   public void testDuplicateNames() throws Exception
   {
@@ -94,48 +89,6 @@ public class ParseSpecTest
             Lists.newArrayList("B", "B"),
             Lists.<SpatialDimensionSchema>newArrayList()
         ),
-        ",",
-        null,
-        Arrays.asList("a", "B"),
-        false,
-        0
-    );
-  }
-
-  @Test
-  public void testDefaultTimestampSpec() throws Exception
-  {
-    expectedException.expect(NullPointerException.class);
-    expectedException.expectMessage("parseSpec requires timestampSpec");
-    @SuppressWarnings("unused") // expected exception
-    final ParseSpec spec = new DelimitedParseSpec(
-        null,
-        new DimensionsSpec(
-            DimensionsSpec.getDefaultSchemas(Collections.singletonList("a")),
-            Lists.newArrayList("B", "B"),
-            Lists.<SpatialDimensionSchema>newArrayList()
-        ),
-        ",",
-        null,
-        Arrays.asList("a", "B"),
-        false,
-        0
-    );
-  }
-
-  @Test
-  public void testDimensionSpecRequired() throws Exception
-  {
-    expectedException.expect(NullPointerException.class);
-    expectedException.expectMessage("parseSpec requires dimensionSpec");
-    @SuppressWarnings("unused") // expected exception
-    final ParseSpec spec = new DelimitedParseSpec(
-        new TimestampSpec(
-            "timestamp",
-            "auto",
-            null
-        ),
-        null,
         ",",
         null,
         Arrays.asList("a", "B"),

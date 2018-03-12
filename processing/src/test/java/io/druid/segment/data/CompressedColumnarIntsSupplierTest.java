@@ -19,6 +19,7 @@
 
 package io.druid.segment.data;
 
+import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import io.druid.java.util.common.StringUtils;
 import io.druid.java.util.common.guava.CloseQuietly;
@@ -144,7 +145,7 @@ public class CompressedColumnarIntsSupplierTest extends CompressionStrategyTest
   @Test
   public void testLargeChunks() throws Exception
   {
-    final int maxChunkSize = CompressedPools.BUFFER_SIZE / Long.BYTES;
+    final int maxChunkSize = CompressedPools.BUFFER_SIZE / Longs.BYTES;
 
     setupLargeChunks(maxChunkSize, 10 * maxChunkSize);
     Assert.assertEquals(10, supplier.getBaseIntBuffers().size());
@@ -162,7 +163,7 @@ public class CompressedColumnarIntsSupplierTest extends CompressionStrategyTest
   @Test(expected = IllegalArgumentException.class)
   public void testChunkTooBig() throws Exception
   {
-    final int maxChunkSize = CompressedPools.BUFFER_SIZE / Integer.BYTES;
+    final int maxChunkSize = CompressedPools.BUFFER_SIZE / Ints.BYTES;
     setupLargeChunks(maxChunkSize + 1, 10 * (maxChunkSize + 1));
   }
 
@@ -205,7 +206,7 @@ public class CompressedColumnarIntsSupplierTest extends CompressionStrategyTest
 
         try {
           for (int i = 0; i < numRuns; ++i) {
-            for (int j = 0, size = columnarInts.size(); j < size; ++j) {
+            for (int j = 0; j < columnarInts.size(); ++j) {
               final long val = vals[j];
               final long indexedVal = columnarInts.get(j);
               if (Longs.compare(val, indexedVal) != 0) {
@@ -285,7 +286,7 @@ public class CompressedColumnarIntsSupplierTest extends CompressionStrategyTest
 
     // sequential access
     int[] indices = new int[vals.length];
-    for (int i = 0, size = columnarInts.size(); i < size; ++i) {
+    for (int i = 0; i < columnarInts.size(); ++i) {
       Assert.assertEquals(vals[i], columnarInts.get(i), 0.0);
       indices[i] = i;
     }

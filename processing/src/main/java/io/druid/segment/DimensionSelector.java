@@ -149,13 +149,6 @@ public interface DimensionSelector extends ColumnValueSelector, HotLoopCallee
     return 0L;
   }
 
-  @Deprecated
-  @Override
-  default boolean isNull()
-  {
-    return false;
-  }
-
   /**
    * Converts the current result of {@link #getRow()} into null, if the row is empty, a String, if the row has size 1,
    * or a String[] array, if the row has size > 1, using {@link #lookupName(int)}.
@@ -167,17 +160,16 @@ public interface DimensionSelector extends ColumnValueSelector, HotLoopCallee
   default Object defaultGetObject()
   {
     IndexedInts row = getRow();
-    int rowSize = row.size();
-    if (rowSize == 0) {
+    if (row.size() == 0) {
       return null;
-    } else if (rowSize == 1) {
-      return lookupName(row.get(0));
-    } else {
-      final String[] strings = new String[rowSize];
-      for (int i = 0; i < rowSize; i++) {
-        strings[i] = lookupName(row.get(i));
-      }
-      return strings;
     }
+    if (row.size() == 1) {
+      return lookupName(row.get(0));
+    }
+    final String[] strings = new String[row.size()];
+    for (int i = 0; i < row.size(); i++) {
+      strings[i] = lookupName(row.get(i));
+    }
+    return strings;
   }
 }

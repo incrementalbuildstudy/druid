@@ -43,7 +43,7 @@ public class DistinctCountAggregator implements Aggregator
   public void aggregate()
   {
     IndexedInts row = selector.getRow();
-    for (int i = 0, rowSize = row.size(); i < rowSize; i++) {
+    for (int i = 0; i < row.size(); i++) {
       int index = row.get(i);
       mutableBitmap.add(index);
     }

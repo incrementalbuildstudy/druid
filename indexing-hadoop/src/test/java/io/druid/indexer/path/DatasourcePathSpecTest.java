@@ -150,8 +150,7 @@ public class DatasourcePathSpecTest
         jsonMapper,
         null,
         ingestionSpec,
-        Long.valueOf(10),
-        false
+        Long.valueOf(10)
     );
     PathSpec actual = jsonMapper.readValue(jsonMapper.writeValueAsString(expected), PathSpec.class);
     Assert.assertEquals(expected, actual);
@@ -160,8 +159,7 @@ public class DatasourcePathSpecTest
         jsonMapper,
         null,
         ingestionSpec,
-        null,
-        false
+        null
     );
     actual = jsonMapper.readValue(jsonMapper.writeValueAsString(expected), PathSpec.class);
     Assert.assertEquals(expected, actual);
@@ -170,18 +168,7 @@ public class DatasourcePathSpecTest
         jsonMapper,
         segments,
         ingestionSpec,
-        null,
-        false
-    );
-    actual = jsonMapper.readValue(jsonMapper.writeValueAsString(expected), PathSpec.class);
-    Assert.assertEquals(expected, actual);
-
-    expected = new DatasourcePathSpec(
-        jsonMapper,
-        segments,
-        ingestionSpec,
-        null,
-        true
+        null
     );
     actual = jsonMapper.readValue(jsonMapper.writeValueAsString(expected), PathSpec.class);
     Assert.assertEquals(expected, actual);
@@ -198,8 +185,7 @@ public class DatasourcePathSpecTest
         mapper,
         segments,
         ingestionSpec,
-        null,
-        false
+        null
     );
 
     Configuration config = new Configuration();
@@ -240,8 +226,7 @@ public class DatasourcePathSpecTest
         mapper,
         null,
         ingestionSpec,
-        null,
-        false
+        null
     );
 
     Configuration config = new Configuration();
@@ -262,8 +247,7 @@ public class DatasourcePathSpecTest
         mapper,
         null,
         ingestionSpec.withIgnoreWhenNoSegments(true),
-        null,
-        false
+        null
     );
     pathSpec.addInputPaths(hadoopIndexerConfig, job);
 

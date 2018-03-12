@@ -22,12 +22,11 @@ package io.druid.sql.calcite.http;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import io.druid.segment.TestHelper;
-import io.druid.sql.calcite.util.CalciteTestBase;
 import io.druid.sql.http.SqlQuery;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SqlQueryTest extends CalciteTestBase
+public class SqlQueryTest
 {
   @Test
   public void testSerde() throws Exception

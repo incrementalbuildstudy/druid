@@ -93,9 +93,9 @@ public class DruidTypeSystem implements RelDataTypeSystem
     // Widen all sums to 64-bits regardless of the size of the inputs.
 
     if (SqlTypeName.INT_TYPES.contains(argumentType.getSqlTypeName())) {
-      return Calcites.createSqlType(typeFactory, SqlTypeName.BIGINT);
+      return typeFactory.createSqlType(SqlTypeName.BIGINT);
     } else {
-      return Calcites.createSqlType(typeFactory, SqlTypeName.DOUBLE);
+      return typeFactory.createSqlType(SqlTypeName.DOUBLE);
     }
   }
 

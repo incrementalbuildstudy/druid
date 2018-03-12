@@ -326,11 +326,8 @@ public class PeriodGranularity extends Granularity implements JsonSerializable
         h -= h % hours;
         long tt = chronology.hours().add(origin, h);
         // always round down to the previous period (for timestamps prior to origin)
-        if (t < tt && origin > 0) {
+        if (t < tt) {
           t = chronology.hours().add(tt, -hours);
-        } else if (t > tt && origin < 0) {
-          t = chronology.minuteOfHour().roundFloor(tt);
-          t = chronology.minuteOfHour().set(t, 0);
         } else {
           t = tt;
         }

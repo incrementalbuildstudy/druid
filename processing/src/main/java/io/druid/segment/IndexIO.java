@@ -23,7 +23,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -85,7 +84,6 @@ public class IndexIO
   public static final byte V8_VERSION = 0x8;
   public static final byte V9_VERSION = 0x9;
   public static final int CURRENT_VERSION_ID = V9_VERSION;
-  public static BitmapSerdeFactory LEGACY_FACTORY = new BitmapSerde.LegacyBitmapSerdeFactory();
 
   public static final ByteOrder BYTE_ORDER = ByteOrder.nativeOrder();
 
@@ -164,11 +162,13 @@ public class IndexIO
       if (rb1.getRowNum() != rb2.getRowNum()) {
         throw new SegmentValidationException("Row number mismatch: [%d] vs [%d]", rb1.getRowNum(), rb2.getRowNum());
       }
-      try {
-        validateRowValues(dimHandlers, rb1, adapter1, rb2, adapter2);
-      }
-      catch (SegmentValidationException ex) {
-        throw new SegmentValidationException(ex, "Validation failure on row %d: [%s] vs [%s]", row, rb1, rb2);
+      if (rb1.compareTo(rb2) != 0) {
+        try {
+          validateRowValues(dimHandlers, rb1, adapter1, rb2, adapter2);
+        }
+        catch (SegmentValidationException ex) {
+          throw new SegmentValidationException(ex, "Validation failure on row %d: [%s] vs [%s]", row, rb1, rb2);
+        }
       }
     }
     if (it2.hasNext()) {
@@ -477,11 +477,7 @@ public class IndexIO
               metric,
               new ColumnBuilder()
                   .setType(ValueType.FLOAT)
-                  .setGenericColumn(new FloatGenericColumnSupplier(
-                      metricHolder.floatType,
-                      LEGACY_FACTORY.getBitmapFactory()
-                                    .makeEmptyImmutableBitmap()
-                  ))
+                  .setGenericColumn(new FloatGenericColumnSupplier(metricHolder.floatType))
                   .build()
           );
         } else if (metricHolder.getType() == MetricHolder.MetricType.COMPLEX) {
@@ -511,11 +507,7 @@ public class IndexIO
           Column.TIME_COLUMN_NAME,
           new ColumnBuilder()
               .setType(ValueType.LONG)
-              .setGenericColumn(new LongGenericColumnSupplier(
-                  index.timestamps,
-                  LEGACY_FACTORY.getBitmapFactory()
-                                .makeEmptyImmutableBitmap()
-              ))
+              .setGenericColumn(new LongGenericColumnSupplier(index.timestamps))
               .build()
       );
       return new SimpleQueryableIndex(
@@ -602,10 +594,6 @@ public class IndexIO
       Map<String, Column> columns = Maps.newHashMap();
 
       for (String columnName : cols) {
-        if (Strings.isNullOrEmpty(columnName)) {
-          log.warn("Null or Empty Dimension found in the file : " + inDir);
-          continue;
-        }
         columns.put(columnName, deserializeColumn(mapper, smooshedFiles.mapFile(columnName), smooshedFiles));
       }
 
